@@ -8,7 +8,7 @@ const mongoDBConfig = require('./config/mongodb.config');
 const app = express();
 const PORT = process.env.PORT;
 const ENV = process.env.ENV || 'development';
-const allowedOrigins = JSON.parse(process.env.ALLOWED_ORIGINS);
+const allowedOrigins = process.env.ALLOWED_ORIGINS ? JSON.parse(process.env.ALLOWED_ORIGINS) : [];
 
 // CORS Configuration
 const corsOptions = {
