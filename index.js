@@ -8,22 +8,23 @@ const mongoDBConfig = require('./config/mongodb.config');
 const app = express();
 const PORT = process.env.PORT;
 const ENV = process.env.ENV || 'development';
-const allowedOrigins = process.env.ALLOWED_ORIGINS ? JSON.parse(process.env.ALLOWED_ORIGINS) : [];
+let allowedOrigins = [];
+try {
+    allowedOrigins = JSON.parse(process.env.ALLOWED_ORIGINS || '[]');
+} catch (error) {
+    // If usage of simple comma-separated string or just '*'
+    allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',');
+}
 
 // CORS Configuration
 const corsOptions = {
     origin: function (origin, callback) {
         console.log('CORS Origin:', origin, ENV, allowedOrigins);
 
-        if (ENV === 'development') {
-            // Allow all in dev
+        if (ENV === 'development' || !origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
-            if (allowedOrigins?.includes(origin)) {
-                callback(null, true);
-            } else {
-                callback(new Error('Not allowed by CORS'));
-            }
+            callback(new Error('Not allowed by CORS'));
         }
     }
 };
