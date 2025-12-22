@@ -69,20 +69,28 @@ const mongoose = require('mongoose');
 
 const gracefulShutdown = () => {
     console.log('\nReceived kill signal, shutting down gracefully');
-    server.close(() => {
+    server.close(async () => {
         console.log('Closed out remaining connections');
-        mongoose.connection.close(false, () => {
+        try {
+            await mongoose.connection.close(false);
             console.log('MongoDB connection closed');
+        } catch (err) {
+            console.error('Error closing MongoDB connection:', err);
+        }
+
+        if (ENV === 'development') {
             console.log('Stopping MinIO Docker container...');
             exec('docker-compose stop minio', (err, stdout, stderr) => {
                 if (err) {
                     console.error('Error stopping MinIO:', err);
-                    return process.exit(1);
+                } else {
+                    console.log('MinIO Docker container stopped');
                 }
-                console.log('MinIO Docker container stopped');
                 process.exit(0);
             });
-        });
+        } else {
+            process.exit(0);
+        }
     });
 
     // Force close server after 10secs
