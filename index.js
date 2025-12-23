@@ -61,7 +61,9 @@ const { ensureBucketExists } = require('./utilities/s3Bucket');
 const server = app.listen(PORT, () => {
     console.log('Docker Compose is running');
     console.log(`Server is running on http://localhost:${PORT}`);
-    ensureBucketExists();
+    if (ENV !== 'production') {
+        ensureBucketExists();
+    }
 });
 
 const { exec } = require('child_process');
