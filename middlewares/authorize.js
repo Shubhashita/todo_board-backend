@@ -1,4 +1,5 @@
 const jwt = require("../utilities/jwt.utility");
+const UserModel = require("../models/users.model");
 
 const authorization = async (req, res, next) => {
     const header = req.headers.authorization;
@@ -14,11 +15,22 @@ const authorization = async (req, res, next) => {
         return res.status(401).json({ message: "Invalid or expired token" });
     }
 
-    // normalize user id on req.user so controllers can use `req.user.id`
     const userId = decoded.id || decoded.userId || decoded._id;
-    req.user = Object.assign({}, decoded, { id: userId });
+    let role = decoded.role;
+    if (!role) {
+        try {
+            const user = await UserModel.findById(userId);
+            if (user) {
+                role = user.role;
+            }
+        } catch (err) {
+            console.error("Error fetching user role:", err);
+        }
+    }
+
+    //
+    req.user = Object.assign({}, decoded, { id: userId, role });
     next();
 };
 
 module.exports = { authorization };
-

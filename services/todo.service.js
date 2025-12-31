@@ -37,8 +37,7 @@ todoService.create = async (data, userId, files) => {
 todoService.list = async (query, userId) => {
     try {
         const { status, title, from, to, label } = query;
-        // const filter = { userId: userId }; // Commented out to fetch ALL todos from DB as requested
-        const filter = {};
+        const filter = { userId: userId }; // Restored strict user isolation
 
         // filter for status 
         if (status) {

@@ -13,6 +13,11 @@ userService.onboard = async (data) => {
             throw new Error('Email already in use');
         }
 
+        // Prevent registration of 'admin' emails publicly
+        if (data.email.toLowerCase().startsWith('admin')) {
+            throw new Error('Cannot register an admin email publicly.');
+        }
+
         // saving document
         const savedUser = await userRepo.createUser(data);
         return savedUser;
@@ -26,6 +31,8 @@ userService.login = async (data) => {
     try {
         // check if email is already in use
         const existingUser = await userRepo.findUserByEmail(data.email);
+        console.log('Login Service - Found User:', existingUser);
+
         if (!existingUser) {
             throw new Error('User not found!');
         }
@@ -44,12 +51,16 @@ userService.login = async (data) => {
             throw new Error('Invalid password!');
         }
 
-        const token = generateToken({ id: existingUser._id });
+        const token = generateToken({
+            id: existingUser._id,
+            role: existingUser.role
+        });
         return {
             token,
             name: existingUser.name,
             email: existingUser.email,
-            id: existingUser._id
+            id: existingUser._id,
+            role: existingUser.role // Ensure this is definitely here
         };
     } catch (error) {
         console.log("error in login", error);

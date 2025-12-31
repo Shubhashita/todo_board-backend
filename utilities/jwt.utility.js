@@ -5,6 +5,7 @@ const EXPIRES_IN = process.env.JWT_EXPIRES_IN || "1h";
 
 // Generate JWT
 const generateToken = (payload) => {
+    // Ensure role (and other fields) is included in the token payload if passed
     return jwt.sign(payload, SECRET, { expiresIn: EXPIRES_IN });
 };
 
