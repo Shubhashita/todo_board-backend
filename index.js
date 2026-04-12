@@ -1,32 +1,45 @@
 const dotenv = require('dotenv');
-dotenv.config({ path: '.env.local', quiet: true });
+// Load default .env if it exists
+dotenv.config(); 
+// Load .env.local if it exists (for local overrides)
+dotenv.config({ path: '.env.local', override: true });
+
 const express = require('express');
 const cors = require('cors');
 const router = require('./routes/index');
 const mongoDBConfig = require('./config/mongodb.config');
 
 const app = express();
-const PORT = process.env.PORT;
-const ENV = process.env.ENV || 'development';
-let allowedOrigins = [];
-try {
-    allowedOrigins = JSON.parse(process.env.ALLOWED_ORIGINS || '[]');
-} catch (error) {
-    // If usage of simple comma-separated string or just '*'
-    allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',');
+
+// Validate required environment variables — fail fast if missing
+const REQUIRED_ENV = ['PORT', 'ENV', 'MONGO_URL', 'JWT_SECRET', 'ALLOWED_ORIGINS'];
+const missingEnv = REQUIRED_ENV.filter(key => !process.env[key]);
+if (missingEnv.length > 0) {
+    console.error(`Missing required environment variables: ${missingEnv.join(', ')}`);
+    process.exit(1);
 }
+
+const PORT = process.env.PORT;
+const ENV = process.env.ENV;
+
+const allowedOrigins = process.env.ALLOWED_ORIGINS.startsWith('[')
+    ? JSON.parse(process.env.ALLOWED_ORIGINS)
+    : process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim());
 
 // CORS Configuration
 const corsOptions = {
     origin: function (origin, callback) {
-        console.log('CORS Origin:', origin, ENV, allowedOrigins);
+        // Allow requests with no origin (like mobile apps or curl)
+        if (!origin) return callback(null, true);
 
-        if (ENV === 'development' || !origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+        if (ENV === 'development' || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
+            console.error(`Origin ${origin} not allowed by CORS`);
             callback(new Error('Not allowed by CORS'));
         }
-    }
+    },
+    credentials: true
 };
 
 app.use(cors(corsOptions));

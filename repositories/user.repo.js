@@ -4,7 +4,7 @@ const userRepo = {}
 
 userRepo.createUser = async (data) => {
     const user = new UserModel(data);
-    return await user.save({ new: true, runValidators: true });
+    return await user.save();
 }
 
 userRepo.findUserByEmail = async (email) => {

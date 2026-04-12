@@ -4,6 +4,11 @@ const mongoDBConfig = async () => {
   try {
     // Get MongoDB URI from environment variable or use fallback
     const mongoURI = process.env.MONGO_URL;
+    if (!mongoURI) {
+      throw new Error("MONGO_URL is NOT defined in environment variables!");
+    }
+    const maskedURI = mongoURI.replace(/:([^@]+)@/, ":****@");
+    console.log(`Connecting to MongoDB: ${maskedURI}`);
 
     // Connection options for better reliability
     const options = {

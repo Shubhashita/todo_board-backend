@@ -6,20 +6,21 @@ const { generateToken } = require('../utilities/jwt.utility');
 userService.onboard = async (data) => {
     try {
 
+        const email = data.email.toLowerCase();
         // check if email is already in use
-        const existingUser = await userRepo.findUserByEmail(data.email);
+        const existingUser = await userRepo.findUserByEmail(email);
 
         if (existingUser) {
             throw new Error('Email already in use');
         }
 
         // Prevent registration of 'admin' emails publicly
-        if (data.email.toLowerCase().startsWith('admin')) {
+        if (email.startsWith('admin')) {
             throw new Error('Cannot register an admin email publicly.');
         }
 
         // saving document
-        const savedUser = await userRepo.createUser(data);
+        const savedUser = await userRepo.createUser({ ...data, email });
         return savedUser;
     } catch (error) {
         console.log("error in onboard", error);
@@ -29,9 +30,10 @@ userService.onboard = async (data) => {
 
 userService.login = async (data) => {
     try {
+        const email = data.email.toLowerCase();
         // check if email is already in use
-        const existingUser = await userRepo.findUserByEmail(data.email);
-        console.log('Login Service - Found User:', existingUser);
+        const existingUser = await userRepo.findUserByEmail(email);
+        console.log('Login Service - Found User:', existingUser ? email : 'None');
 
         if (!existingUser) {
             throw new Error('User not found!');
