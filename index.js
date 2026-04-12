@@ -12,7 +12,7 @@ const mongoDBConfig = require('./config/mongodb.config');
 const app = express();
 
 // Validate required environment variables — fail fast if missing
-const REQUIRED_ENV = ['PORT', 'ENV', 'MONGO_URL', 'JWT_SECRET', 'ALLOWED_ORIGINS'];
+const REQUIRED_ENV = ['PORT', 'ENV', 'MONGO_URL', 'JWT_SECRET', 'ALLOWED_ORIGINS', 'BASE_URL'];
 const missingEnv = REQUIRED_ENV.filter(key => !process.env[key]);
 if (missingEnv.length > 0) {
     console.error(`Missing required environment variables: ${missingEnv.join(', ')}`);
@@ -72,10 +72,34 @@ app.use('/', router);
 const { ensureBucketExists } = require('./utilities/s3Bucket');
 
 const server = app.listen(PORT, () => {
-    console.log('Docker Compose is running');
-    console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`Server is running on port ${PORT} [${ENV}]`);
     if (ENV !== 'production') {
         ensureBucketExists();
+    }
+
+    // Keep-alive ping for production (Render free tier spins down after inactivity)
+    if (ENV === 'production') {
+        const BASE_URL = process.env.BASE_URL;
+        if (BASE_URL) {
+            const PING_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
+            setInterval(async () => {
+                try {
+                    const https = require('https');
+                    const http = require('http');
+                    const client = BASE_URL.startsWith('https') ? https : http;
+                    client.get(`${BASE_URL}/health`, (res) => {
+                        console.log(`[Keep-alive] Pinged /health — status: ${res.statusCode}`);
+                    }).on('error', (err) => {
+                        console.error('[Keep-alive] Ping failed:', err.message);
+                    });
+                } catch (err) {
+                    console.error('[Keep-alive] Error:', err.message);
+                }
+            }, PING_INTERVAL_MS);
+            console.log(`[Keep-alive] Self-ping enabled every 10 minutes → ${BASE_URL}/health`);
+        } else {
+            console.warn('[Keep-alive] BASE_URL not set — self-ping disabled');
+        }
     }
 });
 
