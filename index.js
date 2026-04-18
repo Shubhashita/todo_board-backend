@@ -56,13 +56,16 @@ app.use((req, res, next) => {
     next();
 });
 
-// Connect to MongoDB
-mongoDBConfig();
+app.get('/', (req, res) => {
+    return res.json({ message: "Welcome to TODO API - Backend is running! 🚀" });
+});
 
-// Routes
 app.get('/health', (req, res) => {
     return res.json({ message: "Hello from TODO, server is running 🏃‍♀️" });
 });
+
+// Connect to MongoDB
+mongoDBConfig();
 
 // Static Files
 app.use('/uploads', express.static('uploads'));
