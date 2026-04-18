@@ -39,7 +39,8 @@ const corsOptions = {
             callback(new Error('Not allowed by CORS'));
         }
     },
-    credentials: true
+    credentials: true,
+    maxAge: 86400 // Cache preflight response for 24 hours
 };
 
 app.use(cors(corsOptions));
