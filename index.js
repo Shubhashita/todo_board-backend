@@ -12,7 +12,7 @@ const mongoDBConfig = require('./config/mongodb.config');
 const app = express();
 
 // Validate required environment variables — fail fast if missing
-const REQUIRED_ENV = ['PORT', 'ENV', 'MONGO_URL', 'JWT_SECRET', 'ALLOWED_ORIGINS', 'BASE_URL'];
+const REQUIRED_ENV = ['PORT', 'ENV', 'MONGO_URL', 'JWT_SECRET', 'ALLOWED_ORIGINS'];
 const missingEnv = REQUIRED_ENV.filter(key => !process.env[key]);
 if (missingEnv.length > 0) {
     console.error(`Missing required environment variables: ${missingEnv.join(', ')}`);
